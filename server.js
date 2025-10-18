@@ -503,7 +503,7 @@ setInterval(() => {
         updateData.playerShapes = playerShapes;
         io.to(id).emit('update', updateData);
     }
-}, 80);
+}, 114);
 
 server.listen(PORT, () => {
     console.log('\x1b[32m%s\x1b[0m', `Servidor corriendo en puerto ${PORT}`);
