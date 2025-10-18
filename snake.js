@@ -1,3 +1,7 @@
+// Verificar si hay sesión guardada
+const savedUsername = localStorage.getItem('username');
+const savedApples = localStorage.getItem('apples') || 0;
+
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const gameOverDiv = document.getElementById('game-over');
@@ -30,6 +34,14 @@ let loggedInUser = null;
 // Conectar a Socket.IO
 const socket = io();
 
+// Auto-login si hay sesión guardada
+if (savedUsername) {
+    socket.on('connect', () => {
+        // Intentar login automático con credenciales guardadas
+        socket.emit('auto-login', { username: savedUsername, apples: savedApples });
+    });
+}
+
 // Login/Register
 loginBtn.addEventListener('click', () => {
     const username = usernameInput.value.trim();
@@ -61,6 +73,9 @@ logoutBtn.addEventListener('click', () => {
     welcomeSection.style.display = 'none';
     usernameInput.value = '';
     passwordInput.value = '';
+    // Limpiar localStorage
+    localStorage.removeItem('username');
+    localStorage.removeItem('apples');
     socket.emit('logout');
 });
 
@@ -135,6 +150,25 @@ socket.on('login-success', (data) => {
     loginSection.style.display = 'none';
     welcomeSection.style.display = 'flex';
     welcomeMessage.textContent = `Bienvenido ${data.username}`;
+    // Guardar sesión en localStorage
+    localStorage.setItem('username', data.username);
+    localStorage.setItem('apples', data.apples);
+});
+
+socket.on('auto-login-success', (data) => {
+    loggedInUser = data.username;
+    applesEaten = data.apples;
+    updateApplesCounter();
+    loginSection.style.display = 'none';
+    welcomeSection.style.display = 'flex';
+    welcomeMessage.textContent = `Bienvenido ${data.username}`;
+});
+
+socket.on('auto-login-fail', () => {
+    // Limpiar localStorage si auto-login falló
+    localStorage.removeItem('username');
+    localStorage.removeItem('apples');
+    alert('Sesión expirada. Por favor, inicia sesión nuevamente.');
 });
 
 socket.on('login-fail', (message) => {

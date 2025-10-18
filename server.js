@@ -88,6 +88,22 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('auto-login', async (data) => {
+        const { username, apples } = data;
+        const users = await loadUsers();
+        const user = users.find(u => u.username === username);
+
+        if (user && user.apples === apples) {
+            connectedUsers[socket.id] = { username, apples: user.apples || 0 };
+            snakes[socket.id].applesEaten = user.apples || 0;
+            socket.emit('auto-login-success', { username, apples: user.apples || 0 });
+            socket.emit('init', { snakes, apple, yourId: socket.id, applesEaten: user.apples || 0 });
+        } else {
+            // Auto-login falló, limpiar localStorage
+            socket.emit('auto-login-fail');
+        }
+    });
+
     socket.on('register', async (data) => {
         const { username, password } = data;
         const users = await loadUsers();
