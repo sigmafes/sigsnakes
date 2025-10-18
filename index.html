@@ -15,6 +15,13 @@
             background-color: #000;
             font-family: Arial, sans-serif;
         }
+        body.android {
+            justify-content: flex-start;
+            padding-top: 20px;
+        }
+        body.android canvas {
+            margin-bottom: 20px;
+        }
         #top-bar {
             position: absolute;
             top: 10px;
@@ -272,6 +279,15 @@
     <canvas id="game-canvas" width="600" height="600"></canvas>
     <div id="game-over">Game Over<br>Use Enter to revive</div>
     <div id="pause">PAUSED</div>
+
+    <div id="dpad" style="position: absolute; bottom: 220px; right: 10px; display: none; flex-direction: column; align-items: center;">
+        <button class="dpad-btn" data-dir="up" style="width: 50px; height: 50px; margin-bottom: 5px;">↑</button>
+        <div style="display: flex;">
+            <button class="dpad-btn" data-dir="left" style="width: 50px; height: 50px; margin-right: 5px;">←</button>
+            <button class="dpad-btn" data-dir="right" style="width: 50px; height: 50px;">→</button>
+        </div>
+        <button class="dpad-btn" data-dir="down" style="width: 50px; height: 50px; margin-top: 5px;">↓</button>
+    </div>
 
     <div id="secret-color" style="position: absolute; bottom: 220px; left: 10px; width: 300px; background: rgba(0, 0, 0, 0.8); border: 1px solid #fff; color: #fff; padding: 5px; display: none;">
         <div class="shop-item">

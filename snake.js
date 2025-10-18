@@ -1,6 +1,8 @@
 const savedUsername = localStorage.getItem('username');
 const savedApples = localStorage.getItem('apples') || 0;
 
+const isAndroid = /Android/i.test(navigator.userAgent);
+
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const gameOverDiv = document.getElementById('game-over');
@@ -185,10 +187,10 @@ document.addEventListener('keydown', (e) => {
     if (!myId || !snakes[myId] || !snakes[myId].alive) return;
 
     let dir = { x: 0, y: 0 };
-    if (e.key === 'w' || e.key === 'W') dir = { x: 0, y: -1 };
-    else if (e.key === 's' || e.key === 'S') dir = { x: 0, y: 1 };
-    else if (e.key === 'a' || e.key === 'A') dir = { x: -1, y: 0 };
-    else if (e.key === 'd' || e.key === 'D') dir = { x: 1, y: 0 };
+    if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') dir = { x: 0, y: -1 };
+    else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') dir = { x: 0, y: 1 };
+    else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') dir = { x: -1, y: 0 };
+    else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') dir = { x: 1, y: 0 };
 
     if (dir.x !== 0 || dir.y !== 0) {
         socket.emit('direction', dir);
@@ -648,5 +650,29 @@ function checkGameOver() {
         gameOverDiv.style.display = 'block';
     } else {
         gameOverDiv.style.display = 'none';
+    }
+}
+
+// Android D-pad setup
+if (isAndroid) {
+    document.body.classList.add('android');
+    const dpad = document.getElementById('dpad');
+    if (dpad) {
+        dpad.style.display = 'flex';
+        const buttons = dpad.querySelectorAll('.dpad-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const dir = btn.getAttribute('data-dir');
+                let direction = { x: 0, y: 0 };
+                if (dir === 'up') direction = { x: 0, y: -1 };
+                else if (dir === 'down') direction = { x: 0, y: 1 };
+                else if (dir === 'left') direction = { x: -1, y: 0 };
+                else if (dir === 'right') direction = { x: 1, y: 0 };
+                if (direction.x !== 0 || direction.y !== 0) {
+                    socket.emit('direction', direction);
+                }
+            });
+        });
     }
 }
