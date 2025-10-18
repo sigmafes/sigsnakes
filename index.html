@@ -29,6 +29,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            align-items: center;
         }
         #login-section input {
             padding: 5px;
@@ -87,13 +88,42 @@
             font-size: 12px;
             color: #fff;
         }
-        .buy-btn {
+        .color-square.breathing-red {
+            animation: breathe-red 2s infinite;
+        }
+        @keyframes breathe-red {
+            0%, 100% { background-color: #FF0000; }
+            50% { background-color: #000000; }
+        }
+        .color-square.breathing-purple {
+            animation: breathe-purple 2s infinite;
+        }
+        @keyframes breathe-purple {
+            0%, 100% { background-color: #800080; }
+            50% { background-color: #000000; }
+        }
+        .color-square.rgb-cycle {
+            animation: rgb-cycle 3s infinite;
+        }
+        @keyframes rgb-cycle {
+            0% { background-color: #FF0000; }
+            16.66% { background-color: #FFFF00; }
+            33.33% { background-color: #00FF00; }
+            50% { background-color: #00FFFF; }
+            66.66% { background-color: #0000FF; }
+            83.33% { background-color: #FF00FF; }
+            100% { background-color: #FF0000; }
+        }
+        .buy-btn, .use-btn {
             padding: 2px 5px;
             margin-right: 10px;
             background: #fff;
             color: #000;
             border: none;
             cursor: pointer;
+        }
+        .use-btn {
+            display: none;
         }
         canvas {
             border: 2px solid #fff;
@@ -164,45 +194,98 @@
         </div>
     </div>
     <div class="shop">
-        <h3>Shop</h3>
+        <h3>Colors</h3>
         <div class="shop-item">
+            <button class="use-btn" data-color="gradient-yellow-orange">Use</button>
             <div class="color-square" style="background: linear-gradient(to right, #FFFF99, #FFA500);"></div>
             <button class="buy-btn" data-color="gradient-yellow-orange">Buy</button>
-            <span>200 Apples</span>
+            <span class="price">200 Apples</span>
         </div>
         <div class="shop-item">
+            <button class="use-btn" data-color="gradient-cyan-blue">Use</button>
             <div class="color-square" style="background: linear-gradient(to right, #00FFFF, #0000FF);"></div>
             <button class="buy-btn" data-color="gradient-cyan-blue">Buy</button>
-            <span>200 Apples</span>
+            <span class="price">200 Apples</span>
         </div>
         <div class="shop-item">
+            <button class="use-btn" data-color="#DDA0DD">Use</button>
             <div class="color-square" style="background-color: #DDA0DD;"></div>
             <button class="buy-btn" data-color="#DDA0DD">Buy</button>
-            <span>30 Apples</span>
+            <span class="price">30 Apples</span>
         </div>
         <div class="shop-item">
+            <button class="use-btn" data-color="#FFB6C1">Use</button>
             <div class="color-square" style="background-color: #FFB6C1;"></div>
             <button class="buy-btn" data-color="#FFB6C1">Buy</button>
-            <span>30 Apples</span>
+            <span class="price">30 Apples</span>
         </div>
         <div class="shop-item">
+            <button class="use-btn" data-color="#87CEEB">Use</button>
             <div class="color-square" style="background-color: #87CEEB;"></div>
             <button class="buy-btn" data-color="#87CEEB">Buy</button>
-            <span>30 Apples</span>
+            <span class="price">30 Apples</span>
         </div>
         <div class="shop-item">
+            <button class="use-btn" data-color="#FFFF99">Use</button>
             <div class="color-square" style="background-color: #FFFF99;"></div>
             <button class="buy-btn" data-color="#FFFF99">Buy</button>
-            <span>30 Apples</span>
+            <span class="price">30 Apples</span>
+        </div>
+        <div class="shop-item">
+            <button class="use-btn" data-color="breathing-red">Use</button>
+            <div class="color-square breathing-red"></div>
+            <button class="buy-btn" data-color="breathing-red">Buy</button>
+            <span class="price">300 Apples</span>
+        </div>
+        <div class="shop-item">
+            <button class="use-btn" data-color="breathing-purple">Use</button>
+            <div class="color-square breathing-purple"></div>
+            <button class="buy-btn" data-color="breathing-purple">Buy</button>
+            <span class="price">300 Apples</span>
+        </div>
+        <div class="shop-item">
+            <button class="use-btn" data-color="gradient-white-gray">Use</button>
+            <div class="color-square" style="background: linear-gradient(to right, #FFFFFF, #808080);"></div>
+            <button class="buy-btn" data-color="gradient-white-gray">Buy</button>
+            <span class="price">200 Apples</span>
+        </div>
+        <div class="shop-item">
+            <button class="use-btn" data-color="rgb">Use</button>
+            <div class="color-square rgb-cycle"></div>
+            <button class="buy-btn" data-color="rgb">Buy</button>
+            <span class="price">300 Apples</span>
+        </div>
+        <h3>Shapes</h3>
+        <div class="shop-item">
+            <button class="use-btn" data-shape="square">Use</button>
+            <div class="color-square" style="background-color: #00FF00;"></div>
+            <button class="buy-btn" data-shape="square">Buy</button>
+            <span class="price">Free</span>
+        </div>
+        <div class="shop-item">
+            <button class="use-btn" data-shape="round">Use</button>
+            <div class="color-square" style="border-radius: 50%; background-color: #00FF00;"></div>
+            <button class="buy-btn" data-shape="round">Buy</button>
+                <span class="price">500 Apples</span>
         </div>
     </div>
     <canvas id="game-canvas" width="600" height="600"></canvas>
     <div id="game-over">Game Over<br>Use Enter to revive</div>
     <div id="pause">PAUSED</div>
+
+    <div id="secret-color" style="position: absolute; bottom: 220px; left: 10px; width: 300px; background: rgba(0, 0, 0, 0.8); border: 1px solid #fff; color: #fff; padding: 5px; display: none;">
+        <div class="shop-item">
+            <button class="use-btn" data-color="sigmafes">Use</button>
+            <div class="color-square" style="background: linear-gradient(to right, #FFFF00, #8B0000, #0000FF);"></div>
+            <span>Secret Color</span>
+        </div>
+    </div>
     <div id="chat">
         <div id="chat-messages"></div>
         <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100">
     </div>
+    <img id="plati-logo" src="plati.png" alt="Plati Logo" style="position: absolute; bottom: 10px; right: 10px; width: 20px; height: 20px;">
+    <div id="dedication-text" style="position: absolute; bottom: 10px; right: 40px; color: #808080; font-size: 10px; font-family: Arial, sans-serif; text-align: right;">Dedicated to the PlatinumGDPS users<br>who motivate me to do projects like this ❤️</div>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="snake.js"></script>
 </body>

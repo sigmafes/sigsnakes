@@ -7,12 +7,24 @@
   {
     "username": "mafes",
     "password": "$2b$10$cxRz10a0PH3JP6q8z90LR.NlORvMw.UvznDBYjJ63UO7rhOZ2noze",
-    "apples": 6,
-    "color": "#DDA0DD",
+    "apples": 181,
+    "color": "gradient-yellow-orange",
     "ownedColors": [
       "#DDA0DD",
       "#FFB6C1",
-      "#87CEEB"
+      "#87CEEB",
+      "gradient-yellow-orange",
+      "gradient-cyan-blue",
+      "#FFFF99",
+      "breathing-red",
+      "breathing-purple",
+      "gradient-white-gray",
+      "rgb",
+      "sigmafes"
+    ],
+    "ownedShapes": [
+      "round",
+      "square"
     ]
   },
   {
@@ -26,5 +38,14 @@
     "password": "$2b$10$WB.m8Dc47rTIkGUwSFfJQuECqaG32aBNtsJg6OTuaYLM3nLbuBufG",
     "apples": 0,
     "ownedColors": []
+  },
+  {
+    "username": "test123",
+    "password": "$2b$10$L4/0VEDmU6Kb7sfA7/8Z9u6ReXhkWxsqxvfgnUg9M39InUTJAVMQS",
+    "apples": 12,
+    "ownedColors": [],
+    "ownedShapes": [
+      "square"
+    ]
   }
 ]
