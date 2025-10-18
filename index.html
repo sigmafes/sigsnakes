@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Snake Multiplayer</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        #top-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+        #login-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #login-section input {
+            padding: 5px;
+            border: 1px solid #fff;
+            background: #000;
+            color: #fff;
+        }
+        #login-section button {
+            padding: 5px 10px;
+            background: #fff;
+            color: #000;
+            border: none;
+            cursor: pointer;
+        }
+        #welcome-section {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #apples-counter {
+            font-size: 18px;
+        }
+        canvas {
+            border: 2px solid #fff;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+            display: none;
+        }
+        #pause {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="top-bar">
+        <div id="login-section">
+            <input type="text" id="username" placeholder="Usuario">
+            <input type="password" id="password" placeholder="Contraseña">
+            <button id="login-btn">Login</button>
+            <button id="register-btn">Register</button>
+        </div>
+        <div id="welcome-section">
+            <div id="welcome-message"></div>
+            <button id="save-btn">Guardar Datos</button>
+            <button id="logout-btn">Cerrar Sesión</button>
+        </div>
+        <div id="apples-counter">Apples: 0</div>
+    </div>
+    <canvas id="game-canvas" width="600" height="600"></canvas>
+    <div id="game-over">Game Over<br>Usa Enter para revivir</div>
+    <div id="pause">PAUSA</div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="snake.js"></script>
+</body>
+</html>

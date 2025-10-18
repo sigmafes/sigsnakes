@@ -1,0 +1,12 @@
+[
+  {
+    "username": "test",
+    "password": "$2b$10$uqSELIwQZd1VKPjZh1Wbwe1qa/.RWA4DHxHU2DVzwEJbXc3rRm0P2",
+    "apples": 6
+  },
+  {
+    "username": "mafes",
+    "password": "$2b$10$cxRz10a0PH3JP6q8z90LR.NlORvMw.UvznDBYjJ63UO7rhOZ2noze",
+    "apples": 0
+  }
+]
