@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Snake Multiplayer</title>
+    <title>Snake Multiplayer Game</title>
     <style>
         body {
             display: flex;
@@ -51,6 +51,50 @@
         #apples-counter {
             font-size: 18px;
         }
+        .shop {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            color: #fff;
+        }
+        .shop-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .color-square {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #000;
+            position: relative;
+        }
+        .color-square.locked::before {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: #fff;
+        }
+        .color-square.owned::after {
+            content: '✅';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: #fff;
+        }
+        .buy-btn {
+            padding: 2px 5px;
+            margin-right: 10px;
+            background: #fff;
+            color: #000;
+            border: none;
+            cursor: pointer;
+        }
         canvas {
             border: 2px solid #fff;
         }
@@ -74,26 +118,81 @@
             text-align: center;
             display: none;
         }
+        #chat {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #fff;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 5px;
+            font-size: 12px;
+        }
+        #chat-input {
+            border: none;
+            background: #000;
+            color: #fff;
+            padding: 5px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <div id="top-bar">
         <div id="login-section">
-            <input type="text" id="username" placeholder="Usuario">
-            <input type="password" id="password" placeholder="Contraseña">
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
             <button id="login-btn">Login</button>
             <button id="register-btn">Register</button>
         </div>
         <div id="welcome-section">
             <div id="welcome-message"></div>
-            <button id="save-btn">Guardar Datos</button>
-            <button id="logout-btn">Cerrar Sesión</button>
+            <button id="save-btn">Save Data</button>
+            <button id="logout-btn">Logout</button>
         </div>
-        <div id="apples-counter">Apples: 0</div>
+        <div>
+            <div id="apples-counter">Apples: 0</div>
+            <div>Use space to pause the game</div>
+        </div>
+    </div>
+    <div class="shop">
+        <h3>Shop</h3>
+        <div class="shop-item">
+            <div class="color-square" style="background-color: #DDA0DD;"></div>
+            <button class="buy-btn" data-color="#DDA0DD">Buy</button>
+            <span>30 Apples</span>
+        </div>
+        <div class="shop-item">
+            <div class="color-square" style="background-color: #FFB6C1;"></div>
+            <button class="buy-btn" data-color="#FFB6C1">Buy</button>
+            <span>30 Apples</span>
+        </div>
+        <div class="shop-item">
+            <div class="color-square" style="background-color: #87CEEB;"></div>
+            <button class="buy-btn" data-color="#87CEEB">Buy</button>
+            <span>30 Apples</span>
+        </div>
+        <div class="shop-item">
+            <div class="color-square" style="background-color: #FFFF99;"></div>
+            <button class="buy-btn" data-color="#FFFF99">Buy</button>
+            <span>30 Apples</span>
+        </div>
     </div>
     <canvas id="game-canvas" width="600" height="600"></canvas>
-    <div id="game-over">Game Over<br>Usa Enter para revivir</div>
-    <div id="pause">PAUSA</div>
+    <div id="game-over">Game Over<br>Use Enter to revive</div>
+    <div id="pause">PAUSED</div>
+    <div id="chat">
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100">
+    </div>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="snake.js"></script>
 </body>
