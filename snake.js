@@ -1,4 +1,3 @@
-// Verificar si hay sesión guardada
 const savedUsername = localStorage.getItem('username');
 const savedApples = localStorage.getItem('apples') || 0;
 
@@ -20,34 +19,28 @@ const chatInput = document.getElementById('chat-input');
 const chatMessages = document.getElementById('chat-messages');
 
 const gridSize = 20;
-const tileCount = canvas.width / gridSize; // Ahora 30x30 con canvas 600x600
+const tileCount = 30;
 
-// Colores
-const appleColor = '#FF0000'; // Rojo
+const appleColor = '#FF0000';
 
-// Estado del juego
 let snakes = {};
-let apple = { x: 15, y: 15 }; // Centrado en el mapa más grande
+let apples = [];
 let myId = null;
 let paused = false;
 let applesEaten = 0;
 let loggedInUser = null;
-let snakeColor = '#00FF00'; // Color por defecto verde claro
+let snakeColor = '#00FF00';
 let usernames = {};
 let playerColors = {};
 
-// Conectar a Socket.IO
 const socket = io();
 
-// Auto-login si hay sesión guardada
 if (savedUsername) {
     socket.on('connect', () => {
-        // Intentar login automático con credenciales guardadas
         socket.emit('auto-login', { username: savedUsername, apples: savedApples });
     });
 }
 
-// Tienda
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         if (!loggedInUser) {
@@ -58,16 +51,19 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
         if (btn.textContent === 'Use') {
             socket.emit('use-color', { color });
         } else {
-            if (applesEaten >= 30) {
+            let cost = 30;
+            if (color === 'gradient-yellow-orange' || color === 'gradient-cyan-blue') {
+                cost = 200;
+            }
+            if (applesEaten >= cost) {
                 socket.emit('buy-color', { color });
             } else {
-                alert('Not enough apples. You need 30 apples to buy a color.');
+                alert(`Not enough apples. You need ${cost} apples to buy this color.`);
             }
         }
     });
 });
 
-// Login/Register
 loginBtn.addEventListener('click', () => {
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
@@ -98,19 +94,15 @@ logoutBtn.addEventListener('click', () => {
     welcomeSection.style.display = 'none';
     usernameInput.value = '';
     passwordInput.value = '';
-    // Limpiar localStorage
     localStorage.removeItem('username');
     localStorage.removeItem('apples');
     socket.emit('logout');
 });
 
-// Controles
 document.addEventListener('keydown', (e) => {
-    // Prevent game controls when typing in inputs
     if (e.target.tagName === 'INPUT') return;
 
     if (e.key === ' ') {
-        // Pausa
         paused = !paused;
         pauseDiv.style.display = paused ? 'block' : 'none';
         socket.emit('pause', paused);
@@ -119,7 +111,6 @@ document.addEventListener('keydown', (e) => {
     }
 
     if (e.key === 'Enter') {
-        // Revivir
         if (myId && snakes[myId] && !snakes[myId].alive) {
             socket.emit('revive');
         }
@@ -139,14 +130,13 @@ document.addEventListener('keydown', (e) => {
 
     if (dir.x !== 0 || dir.y !== 0) {
         socket.emit('direction', dir);
-        e.preventDefault(); // Prevenir scroll de página
+        e.preventDefault();
     }
 });
 
-// Eventos de Socket.IO
 socket.on('init', (data) => {
     snakes = data.snakes;
-    apple = data.apple;
+    apples = data.apples;
     myId = data.yourId;
     if (data.applesEaten !== undefined) {
         applesEaten = data.applesEaten;
@@ -157,7 +147,7 @@ socket.on('init', (data) => {
 
 socket.on('update', (data) => {
     snakes = data.snakes;
-    apple = data.apple;
+    apples = data.apples;
     if (data.applesEaten !== undefined) {
         applesEaten = data.applesEaten;
         updateApplesCounter();
@@ -184,10 +174,12 @@ socket.on('login-success', (data) => {
     loginSection.style.display = 'none';
     welcomeSection.style.display = 'flex';
     welcomeMessage.textContent = `Bienvenido ${data.username}`;
-    // Guardar sesión en localStorage
     localStorage.setItem('username', data.username);
     localStorage.setItem('apples', data.apples);
     updateShopButtons(data.ownedColors || []);
+    if (data.color) {
+        snakeColor = data.color;
+    }
 });
 
 socket.on('auto-login-success', (data) => {
@@ -198,10 +190,12 @@ socket.on('auto-login-success', (data) => {
     welcomeSection.style.display = 'flex';
     welcomeMessage.textContent = `Bienvenido ${data.username}`;
     updateShopButtons(data.ownedColors || []);
+    if (data.color) {
+        snakeColor = data.color;
+    }
 });
 
 socket.on('auto-login-fail', () => {
-    // Limpiar localStorage si auto-login falló
     localStorage.removeItem('username');
     localStorage.removeItem('apples');
     alert('Sesión expirada. Por favor, inicia sesión nuevamente.');
@@ -225,7 +219,11 @@ socket.on('save-success', () => {
 
 socket.on('buy-color-success', (data) => {
     snakeColor = data.color;
-    applesEaten -= 30;
+    let cost = 30;
+    if (data.color === 'gradient-yellow-orange' || data.color === 'gradient-cyan-blue') {
+        cost = 200;
+    }
+    applesEaten -= cost;
     updateApplesCounter();
     alert('Color purchased successfully!');
     updateShopButtons(data.ownedColors);
@@ -244,7 +242,6 @@ socket.on('use-color-fail', (message) => {
     alert(message);
 });
 
-// Chat functionality
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const message = chatInput.value.trim();
@@ -261,11 +258,17 @@ socket.on('chat-message', (data) => {
 
 function addChatMessage(username, message) {
     const messageDiv = document.createElement('div');
-    messageDiv.textContent = `${username}: ${message}`;
+    let displayUsername = username;
+    if (username === 'mafes') {
+        displayUsername = '⭐mafes [MOD]';
+    }
+    if (username === 'mafes') {
+        messageDiv.style.color = '#FFFF00';
+    }
+    messageDiv.textContent = `${displayUsername}: ${message}`;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // Keep only last 10 messages
     while (chatMessages.children.length > 10) {
         chatMessages.removeChild(chatMessages.firstChild);
     }
@@ -301,7 +304,11 @@ function updateShopButtons(ownedColors) {
             btn.textContent = 'Buy';
             square.classList.add('locked');
             square.classList.remove('owned');
-            priceSpan.textContent = '30 Apples';
+            if (color === 'gradient-yellow-orange' || color === 'gradient-cyan-blue') {
+                priceSpan.textContent = '200 Apples';
+            } else {
+                priceSpan.textContent = '30 Apples';
+            }
         }
     });
 }
@@ -310,7 +317,6 @@ function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar líneas grises para las cuadrículas
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1;
     for (let i = 0; i <= tileCount; i++) {
@@ -324,32 +330,68 @@ function draw() {
         ctx.stroke();
     }
 
-    // Dibujar manzana
-    ctx.fillStyle = appleColor;
-    ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+    apples.forEach(apple => {
+        let color = appleColor;
+        if (apple.type === 'speed') color = '#FFFFFF';
+        else if (apple.type === 'double') color = '#FFA500';
+        else if (apple.type === 'invincible') color = '#FF69B4';
+        ctx.fillStyle = color;
+        ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+    });
 
-    // Dibujar serpientes
     for (let id in snakes) {
         const snake = snakes[id];
-        // El jugador local usa su color comprado, los demás usan su color o verde oscuro si no tienen
         if (id === myId) {
-            ctx.fillStyle = snakeColor; // Color personalizado para el jugador local
+            if (snakeColor.startsWith('gradient-')) {
+                const gradient = ctx.createLinearGradient(0, 0, gridSize, gridSize);
+                if (snakeColor === 'gradient-yellow-orange') {
+                    gradient.addColorStop(0, '#FFFF99');
+                    gradient.addColorStop(1, '#FFA500');
+                } else if (snakeColor === 'gradient-cyan-blue') {
+                    gradient.addColorStop(0, '#00FFFF');
+                    gradient.addColorStop(1, '#0000FF');
+                }
+                ctx.fillStyle = gradient;
+            } else {
+                ctx.fillStyle = snakeColor;
+            }
         } else {
             const playerColor = playerColors[id];
-            if (playerColor && playerColor !== '#00FF00') { // Si tiene un color comprado diferente al default
-                ctx.fillStyle = darkenColor(playerColor); // Oscurecer el color para diferenciar
+            if (playerColor && playerColor !== '#00FF00') {
+                if (playerColor.startsWith('gradient-')) {
+                    if (playerColor === 'gradient-yellow-orange') {
+                        ctx.fillStyle = darkenColor('#FFFF99');
+                    } else if (playerColor === 'gradient-cyan-blue') {
+                        ctx.fillStyle = darkenColor('#00FFFF');
+                    } else {
+                        ctx.fillStyle = darkenColor('#FFFF99');
+                    }
+                } else {
+                    ctx.fillStyle = darkenColor(playerColor);
+                }
             } else {
-                ctx.fillStyle = '#006400'; // Verde oscuro para otros jugadores sin color comprado
+                ctx.fillStyle = '#006400';
             }
         }
+
+        if (snake.invincible > 0) {
+            ctx.strokeStyle = '#FF69B4';
+            ctx.lineWidth = 2;
+            snake.body.forEach(segment => {
+                ctx.strokeRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+            });
+        }
+
         snake.body.forEach(segment => {
             ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
         });
 
-        // Dibujar nombre de usuario encima de la cabeza
         if (snake.body.length > 0) {
             const head = snake.body[0];
-            const username = usernames[id] || 'Guest';
+            let username = usernames[id] || 'Guest';
+            if (username === 'mafes') {
+                username = '⭐mafes';
+            }
             ctx.fillStyle = '#FFF';
             ctx.font = '12px Arial';
             ctx.textAlign = 'center';

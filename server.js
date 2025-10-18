@@ -11,16 +11,15 @@ const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 const USERS_FILE = 'users.json';
 
-// Servir archivos estáticos
 app.use(express.static('.'));
 
-// Estado del juego
 let snakes = {};
-let apple = { x: 15, y: 15 }; // Centrado en el mapa más grande
+let apples = [];
 const gridSize = 20;
-const tileCount = 30; // 600 / 20
+const tileCount = 30;
+const maxPlayers = 16;
+const maxApples = 3;
 
-// Usuarios conectados con sus cuentas
 let connectedUsers = {};
 
 async function loadUsers() {
@@ -37,27 +36,47 @@ async function saveUsers(users) {
 }
 
 function generateApple() {
-    apple = {
+    const rand = Math.random();
+    let type = 'normal';
+    if (rand < 0.1) type = 'speed';
+    else if (rand < 0.3) type = 'double';
+    else if (rand < 0.4) type = 'invincible';
+
+    const newApple = {
         x: Math.floor(Math.random() * tileCount),
-        y: Math.floor(Math.random() * tileCount)
+        y: Math.floor(Math.random() * tileCount),
+        type: type
     };
-    // Asegurarse de que no aparezca en una serpiente
+
     for (let id in snakes) {
         if (snakes[id].alive) {
             for (let segment of snakes[id].body) {
-                if (segment.x === apple.x && segment.y === apple.y) {
+                if (segment.x === newApple.x && segment.y === newApple.y) {
                     generateApple();
                     return;
                 }
             }
         }
     }
+
+    apples.push(newApple);
+}
+
+function initApples() {
+    while (apples.length < maxApples) {
+        generateApple();
+    }
 }
 
 io.on('connection', (socket) => {
     console.log('Jugador conectado:', socket.id);
 
-    // Asignar color: primer jugador verde, otros verde oscuro
+    if (Object.keys(snakes).length >= maxPlayers) {
+        socket.emit('server-full', 'Servidor lleno, máximo 16 jugadores.');
+        socket.disconnect();
+        return;
+    }
+
     const playerCount = Object.keys(snakes).length;
     const color = playerCount === 0 ? '#00FF00' : '#006400';
 
@@ -67,11 +86,12 @@ io.on('connection', (socket) => {
         color: color,
         alive: true,
         paused: false,
-        applesEaten: 0
+        applesEaten: 0,
+        speedBoost: 0,
+        invincible: 0
     };
 
-    // Enviar estado inicial
-    socket.emit('init', { snakes, apple, yourId: socket.id, applesEaten: 0 });
+    socket.emit('init', { snakes, apples, yourId: socket.id, applesEaten: 0 });
 
     socket.on('login', async (data) => {
         const { username, password } = data;
@@ -81,8 +101,8 @@ io.on('connection', (socket) => {
         if (user && await bcrypt.compare(password, user.password)) {
             connectedUsers[socket.id] = { username, apples: user.apples || 0, color: user.color || '#00FF00', ownedColors: user.ownedColors || [] };
             snakes[socket.id].applesEaten = user.apples || 0;
-            socket.emit('login-success', { username, apples: user.apples || 0, ownedColors: user.ownedColors || [] });
-            socket.emit('init', { snakes, apple, yourId: socket.id, applesEaten: user.apples || 0 });
+            socket.emit('login-success', { username, apples: user.apples || 0, ownedColors: user.ownedColors || [], color: user.color || '#00FF00' });
+            socket.emit('init', { snakes, apples, yourId: socket.id, applesEaten: user.apples || 0 });
         } else {
             socket.emit('login-fail', 'Usuario o contraseña incorrectos');
         }
@@ -96,10 +116,9 @@ io.on('connection', (socket) => {
         if (user && user.apples === apples) {
             connectedUsers[socket.id] = { username, apples: user.apples || 0, color: user.color || '#00FF00', ownedColors: user.ownedColors || [] };
             snakes[socket.id].applesEaten = user.apples || 0;
-            socket.emit('auto-login-success', { username, apples: user.apples || 0, ownedColors: user.ownedColors || [] });
-            socket.emit('init', { snakes, apple, yourId: socket.id, applesEaten: user.apples || 0 });
+            socket.emit('auto-login-success', { username, apples: user.apples || 0, ownedColors: user.ownedColors || [], color: user.color || '#00FF00' });
+            socket.emit('init', { snakes, apples, yourId: socket.id, applesEaten: user.apples || 0 });
         } else {
-            // Auto-login falló, limpiar localStorage
             socket.emit('auto-login-fail');
         }
     });
@@ -114,7 +133,6 @@ io.on('connection', (socket) => {
             return;
         }
 
-        // Validate username: only letters and numbers, max 16 characters
         if (!/^[a-zA-Z0-9]+$/.test(username) || username.length > 16) {
             socket.emit('register-fail', 'El nombre de usuario debe contener solo letras y números, y tener un máximo de 16 caracteres.');
             return;
@@ -141,7 +159,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('buy-color', async (data) => {
-        if (connectedUsers[socket.id] && connectedUsers[socket.id].apples >= 30) {
+        let cost = 30;
+        if (data.color === 'gradient-yellow-orange' || data.color === 'gradient-cyan-blue') {
+            cost = 200;
+        }
+        if (connectedUsers[socket.id] && connectedUsers[socket.id].apples >= cost) {
             const { username } = connectedUsers[socket.id];
             const users = await loadUsers();
             const userIndex = users.findIndex(u => u.username === username);
@@ -149,8 +171,8 @@ io.on('connection', (socket) => {
                 if (!users[userIndex].ownedColors) users[userIndex].ownedColors = [];
                 if (!users[userIndex].ownedColors.includes(data.color)) {
                     users[userIndex].ownedColors.push(data.color);
-                    users[userIndex].apples -= 30;
-                    connectedUsers[socket.id].apples -= 30;
+                    users[userIndex].apples -= cost;
+                    connectedUsers[socket.id].apples -= cost;
                     connectedUsers[socket.id].ownedColors = users[userIndex].ownedColors;
                     await saveUsers(users);
                     socket.emit('buy-color-success', { color: data.color, ownedColors: users[userIndex].ownedColors });
@@ -180,15 +202,13 @@ io.on('connection', (socket) => {
 
     socket.on('direction', (dir) => {
         if (snakes[socket.id] && snakes[socket.id].alive && !snakes[socket.id].paused) {
-            // Prevenir reversa
             if ((dir.x !== 0 && snakes[socket.id].direction.x === -dir.x) ||
                 (dir.y !== 0 && snakes[socket.id].direction.y === -dir.y)) return;
-            // Prevenir cambio rápido hacia el cuerpo
             const currentHead = snakes[socket.id].body[0];
             const nextHead = { x: currentHead.x + dir.x, y: currentHead.y + dir.y };
             for (let i = 1; i < snakes[socket.id].body.length; i++) {
                 if (nextHead.x === snakes[socket.id].body[i].x && nextHead.y === snakes[socket.id].body[i].y) {
-                    return; // No cambiar dirección si colisionaría inmediatamente
+                    return;
                 }
             }
             snakes[socket.id].direction = dir;
@@ -198,7 +218,7 @@ io.on('connection', (socket) => {
     socket.on('pause', (isPaused) => {
         if (snakes[socket.id]) {
             snakes[socket.id].paused = isPaused;
-            socket.emit('paused', isPaused); // Solo enviar al jugador que pausó
+            socket.emit('paused', isPaused);
         }
     });
 
@@ -212,20 +232,19 @@ io.on('connection', (socket) => {
                 paused: false,
                 applesEaten: snakes[socket.id].applesEaten
             };
-            io.emit('update', { snakes, apple });
+            io.emit('update', { snakes, apples });
         }
     });
 
     socket.on('chat-message', (message) => {
         if (connectedUsers[socket.id]) {
-            const username = connectedUsers[socket.id].username;
+            let username = connectedUsers[socket.id].username;
             io.emit('chat-message', { username, message });
         }
     });
 
     socket.on('disconnect', async () => {
         console.log('Jugador desconectado:', socket.id);
-        // Guardar progreso si está logueado
         if (connectedUsers[socket.id]) {
             const { username } = connectedUsers[socket.id];
             const users = await loadUsers();
@@ -237,27 +256,27 @@ io.on('connection', (socket) => {
             delete connectedUsers[socket.id];
         }
         delete snakes[socket.id];
-        io.emit('update', { snakes, apple });
+        io.emit('update', { snakes, apples });
     });
 });
 
-// Bucle del juego
 setInterval(() => {
+    initApples();
+
     for (let id in snakes) {
         const snake = snakes[id];
         if (!snake.alive || snake.paused) continue;
 
         if (snake.direction.x === 0 && snake.direction.y === 0) continue;
 
-        const head = { x: snake.body[0].x + snake.direction.x, y: snake.body[0].y + snake.direction.y };
+        const step = snake.speedBoost > 0 ? 2 : 1;
+        const head = { x: snake.body[0].x + step * snake.direction.x, y: snake.body[0].y + step * snake.direction.y };
 
-        // Colisión con pared
         if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
             snake.alive = false;
             continue;
         }
 
-        // Colisión con cuerpo propio
         for (let i = 1; i < snake.body.length; i++) {
             if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
                 snake.alive = false;
@@ -266,33 +285,51 @@ setInterval(() => {
         }
         if (!snake.alive) continue;
 
-        // Colisión con otras serpientes
-        for (let otherId in snakes) {
-            if (otherId !== id) {
-                for (let segment of snakes[otherId].body) {
-                    if (head.x === segment.x && head.y === segment.y) {
-                        snake.alive = false;
-                        break;
+        if (snake.invincible <= 0) {
+            for (let otherId in snakes) {
+                if (otherId !== id) {
+                    for (let segment of snakes[otherId].body) {
+                        if (head.x === segment.x && head.y === segment.y) {
+                            snake.alive = false;
+                            break;
+                        }
                     }
                 }
+                if (!snake.alive) break;
             }
-            if (!snake.alive) break;
         }
         if (!snake.alive) continue;
 
         snake.body.unshift(head);
 
-        // Comer manzana
-        if (head.x === apple.x && head.y === apple.y) {
-            snake.applesEaten++;
-            generateApple();
-        } else {
+        let ateApple = false;
+        for (let i = apples.length - 1; i >= 0; i--) {
+            const apple = apples[i];
+            if (head.x === apple.x && head.y === apple.y) {
+                ateApple = true;
+                apples.splice(i, 1);
+                if (apple.type === 'double') {
+                    snake.applesEaten += 2;
+                } else {
+                    snake.applesEaten++;
+                }
+                if (apple.type === 'speed') {
+                    snake.speedBoost = 30;
+                } else if (apple.type === 'invincible') {
+                    snake.invincible = 50;
+                }
+                break;
+            }
+        }
+        if (!ateApple) {
             snake.body.pop();
         }
+
+        if (snake.speedBoost > 0) snake.speedBoost--;
+        if (snake.invincible > 0) snake.invincible--;
     }
 
-    // Enviar actualización con contador de manzanas, usernames y colores
-    const updateData = { snakes, apple };
+    const updateData = { snakes, apples };
     const usernames = {};
     const playerColors = {};
     for (let id in snakes) {

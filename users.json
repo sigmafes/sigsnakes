@@ -7,7 +7,7 @@
   {
     "username": "mafes",
     "password": "$2b$10$cxRz10a0PH3JP6q8z90LR.NlORvMw.UvznDBYjJ63UO7rhOZ2noze",
-    "apples": 1,
+    "apples": 6,
     "color": "#DDA0DD",
     "ownedColors": [
       "#DDA0DD",
@@ -18,6 +18,12 @@
   {
     "username": "test3",
     "password": "$2b$10$oDlt7dtDVHR2Pc4I..uw/.zzG/dDjUYQgemsncY/PQZu85FQq7MbK",
+    "apples": 0,
+    "ownedColors": []
+  },
+  {
+    "username": "test33",
+    "password": "$2b$10$WB.m8Dc47rTIkGUwSFfJQuECqaG32aBNtsJg6OTuaYLM3nLbuBufG",
     "apples": 0,
     "ownedColors": []
   }
