@@ -361,7 +361,7 @@ function addChatMessage(username, message) {
     const messageDiv = document.createElement('div');
     let displayUsername = username;
     if (username === 'mafes') {
-        displayUsername = '⭐mafes [MOD]';
+        displayUsername = '[MOD]mafes';
     }
     if (username === 'mafes') {
         messageDiv.style.color = '#FFFF00';
@@ -669,6 +669,18 @@ if (isAndroid) {
                 else if (dir === 'down') direction = { x: 0, y: 1 };
                 else if (dir === 'left') direction = { x: -1, y: 0 };
                 else if (dir === 'right') direction = { x: 1, y: 0 };
+                else if (dir === 'space') {
+                    paused = !paused;
+                    pauseDiv.style.display = paused ? 'block' : 'none';
+                    socket.emit('pause', paused);
+                    return;
+                }
+                else if (dir === 'enter') {
+                    if (myId && snakes[myId] && !snakes[myId].alive) {
+                        socket.emit('revive');
+                    }
+                    return;
+                }
                 if (direction.x !== 0 || direction.y !== 0) {
                     socket.emit('direction', direction);
                 }
